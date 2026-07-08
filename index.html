@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lightbox v5 — Copy Analysis v2 Dark</title>
+<style>
+  :root {
+    --bg:             #0d0d0d;
+    --surface:        #1a1a19;
+    --surface-2:      #232321;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --border:         rgba(255,255,255,0.08);
+    --accent:         #3987e5;
+    --accent-light:   #1c2e4a;
+    --s1:             #3987e5;
+    --s2:             #199e70;
+    --s3:             #c98500;
+    --s4:             #9085e9;
+    --s5:             #e66767;
+    --s6:             #898781;
+    --red:            #e66767;
+    --yellow:         #c98500;
+    --red-bg:         #2d1a1a;
+    --yellow-bg:      #2a2100;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 40px 32px 64px;
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+
+  /* ── header ── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--gridline);
+  }
+  .header-left h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .header-left p {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .header-tag {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 99px;
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+
+  /* ── KPI row ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .kpi-icon {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .kpi-val {
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1.5px;
+    color: var(--text-primary);
+  }
+  .kpi-val span {
+    color: var(--accent);
+  }
+  .kpi-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .kpi-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ── section grid ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* ── card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .card-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  /* ── ranked list (lollipop style) ── */
+  .rank-list { display: flex; flex-direction: column; gap: 2px; }
+  .rank-row {
+    display: grid;
+    grid-template-columns: 20px 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--gridline);
+    cursor: default;
+  }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-row:hover .rank-bar-fill { filter: brightness(1.1); }
+  .rank-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .rank-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .rank-bar-track {
+    width: 80px;
+    height: 6px;
+    background: var(--surface-2);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+  }
+  .rank-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--accent);
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  }
+  .rank-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    width: 24px;
+    text-align: right;
+  }
+
+  /* ── right column ── */
+  .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── mini stat tiles ── */
+  .mini-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .mini-stat {
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .mini-stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .mini-stat-val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .mini-stat-desc {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ── coverage arc ── */
+  .arc-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .arc-header { width: 100%; }
+  .arc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--gridline);
+  }
+  .arc-row:last-child { border-bottom: none; }
+  .arc-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+  .arc-name { display: flex; align-items: center; }
+  .arc-pct { font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+  /* ── quick wins table ── */
+  .wins-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 16px;
+  }
+  .wins-list { display: flex; flex-direction: column; gap: 0; }
+  .win-row {
+    display: grid;
+    grid-template-columns: 1fr 110px 90px;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--gridline);
+  }
+  .win-row:last-child { border-bottom: none; }
+  .win-element { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+  .win-section {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .win-impact {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .impact-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .high  .impact-dot { background: var(--red); }
+  .high  .win-impact { color: var(--red); }
+  .mid   .impact-dot { background: var(--yellow); }
+  .mid   .win-impact { color: #e0a800; }
+
+  .win-header {
+    display: grid;
+    grid-template-columns: 1fr 110px 90px;
+    gap: 12px;
+    padding: 0 0 8px;
+    border-bottom: 2px solid var(--gridline);
+    margin-bottom: 2px;
+  }
+  .win-header span {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  /* ── footer note ── */
+  .footer {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    padding-top: 16px;
+    border-top: 1px solid var(--gridline);
+  }
+</style>
+</head>
+<body>
+
+<!-- header -->
+<header class="header">
+  <div class="header-left">
+    <h1>Lightbox v5 — Copy Analysis</h1>
+    <p>UX writing review · 15 sections · Trustly Lightbox flow</p>
+    <p style="margin-top:6px;">
+      <a href="https://www.figma.com/design/2v26EtBnv5WL3a7YY6xiAJ/Lightbox-v5?node-id=8936-78451&t=PJPS38KhNozmIqEP-1"
+         target="_blank" rel="noopener"
+         style="color:var(--accent);font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        View Figma file
+      </a>
+    </p>
+  </div>
+  <div class="header-tag">In progress</div>
+</header>
+
+<!-- KPI row -->
+<div class="kpi-row">
+  <div class="kpi">
+    <div class="kpi-icon">✏️</div>
+    <div class="kpi-val"><span>91</span></div>
+    <div class="kpi-label">Change ideas</div>
+    <div class="kpi-desc">Across 15 flow sections</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-icon">💬</div>
+    <div class="kpi-val"><span>172</span></div>
+    <div class="kpi-label">Copy variations written</div>
+    <div class="kpi-desc">Alternative phrasings & rewrites</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-icon">🔄</div>
+    <div class="kpi-val"><span>1.9</span><span style="font-size:20px;letter-spacing:0;color:var(--text-muted)">×</span></div>
+    <div class="kpi-label">Avg variations per idea</div>
+    <div class="kpi-desc">Discussion rounds avg 3.2×</div>
+  </div>
+</div>
+
+<!-- main grid -->
+<div class="main-grid">
+
+  <!-- left: ranked section list -->
+  <div class="card">
+    <div class="card-title">Sections by copy variations written</div>
+    <div class="card-sub">Ranked by total alternative phrasings produced per section</div>
+    <div class="rank-list" id="rank-list"></div>
+    <details style="margin-top:12px">
+      <summary style="font-size:11px;color:var(--text-muted);cursor:pointer">View full table</summary>
+      <table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:12px" id="full-table">
+        <thead><tr>
+          <th style="text-align:left;color:var(--text-muted);font-weight:500;padding:4px 0;border-bottom:1px solid var(--gridline)">#</th>
+          <th style="text-align:left;color:var(--text-muted);font-weight:500;padding:4px 8px;border-bottom:1px solid var(--gridline)">Section</th>
+          <th style="text-align:right;color:var(--text-muted);font-weight:500;padding:4px 0;border-bottom:1px solid var(--gridline)">Ideas</th>
+          <th style="text-align:right;color:var(--text-muted);font-weight:500;padding:4px 0;border-bottom:1px solid var(--gridline)">Variations</th>
+        </tr></thead>
+        <tbody id="full-tbody"></tbody>
+      </table>
+    </details>
+  </div>
+
+  <!-- right col -->
+  <div class="right-col">
+
+    <!-- mini stats -->
+    <div class="mini-stats">
+      <div class="mini-stat">
+        <div class="mini-stat-label">Sections analysed</div>
+        <div class="mini-stat-val">15</div>
+        <div class="mini-stat-desc">of 15 identified</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-label">High priority wins</div>
+        <div class="mini-stat-val">3</div>
+        <div class="mini-stat-desc">immediate ICR impact</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-label">Most ideas</div>
+        <div class="mini-stat-val">11</div>
+        <div class="mini-stat-desc">Native Sign In</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-label">Most variations</div>
+        <div class="mini-stat-val">23</div>
+        <div class="mini-stat-desc">Native Sign In</div>
+      </div>
+    </div>
+
+    <!-- donut-style breakdown -->
+    <div class="arc-card">
+      <div class="arc-header">
+        <div class="card-title">Variation share — top 5</div>
+        <div class="card-sub" style="margin-bottom:12px">% of all 172 variations</div>
+      </div>
+      <svg width="140" height="140" viewBox="0 0 140 140" aria-hidden="true" id="donut-svg">
+        <text x="70" y="65" text-anchor="middle" font-size="28" font-weight="800" fill="var(--text-primary)" font-family="system-ui">172</text>
+        <text x="70" y="82" text-anchor="middle" font-size="11" fill="var(--text-muted)" font-family="system-ui">total</text>
+      </svg>
+      <div style="width:100%" id="arc-legend"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- quick wins -->
+<div class="wins-card">
+  <div class="card-title">Top priority quick wins</div>
+  <div class="card-sub">Highest-impact copy changes identified across all sections</div>
+  <div class="wins-list">
+    <div class="win-header">
+      <span>Element</span>
+      <span>Section</span>
+      <span>Impact</span>
+    </div>
+    <div class="win-row high">
+      <div class="win-element">"Continue" CTA button</div>
+      <div><span class="win-section">Intro</span></div>
+      <div class="win-impact"><span class="impact-dot"></span>High</div>
+    </div>
+    <div class="win-row high">
+      <div class="win-element">"Invalid credentials" error</div>
+      <div><span class="win-section">Sign In</span></div>
+      <div class="win-impact"><span class="impact-dot"></span>High</div>
+    </div>
+    <div class="win-row high">
+      <div class="win-element">"Are you sure?" headline</div>
+      <div><span class="win-section">Dropoff</span></div>
+      <div class="win-impact"><span class="impact-dot"></span>High</div>
+    </div>
+    <div class="win-row mid">
+      <div class="win-element">Search placeholder text</div>
+      <div><span class="win-section">Bank Sel.</span></div>
+      <div class="win-impact"><span class="impact-dot"></span>Mid</div>
+    </div>
+    <div class="win-row mid">
+      <div class="win-element">"Error" standalone title</div>
+      <div><span class="win-section">Errors</span></div>
+      <div class="win-impact"><span class="impact-dot"></span>Mid</div>
+    </div>
+    <div class="win-row mid">
+      <div class="win-element">NACHA label (×3 screens)</div>
+      <div><span class="win-section">Multiple</span></div>
+      <div class="win-impact"><span class="impact-dot"></span>Mid</div>
+    </div>
+    <div class="win-row mid">
+      <div class="win-element">Subtitle placeholder — all screens</div>
+      <div><span class="win-section">Global</span></div>
+      <div class="win-impact"><span class="impact-dot"></span>Mid</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Lightbox v5 · UX Writing Analysis · 15 sections · 91 ideas · 172 variations</div>
+
+<script>
+const data = [
+  { label: "Native Bank Sign In",  ideas: 11, vars: 23 },
+  { label: "Bank Selection",       ideas:  9, vars: 22 },
+  { label: "Intro screen",         ideas:  9, vars: 17 },
+  { label: "MFA",                  ideas:  8, vars: 15 },
+  { label: "TRM Sign Up",          ideas:  7, vars: 13 },
+  { label: "Full Screen Error",    ideas:  8, vars: 13 },
+  { label: "Dropoff Survey",       ideas:  5, vars: 11 },
+  { label: "MEC Multiple Steps",   ideas:  6, vars: 10 },
+  { label: "Account Selection",    ideas:  5, vars:  8 },
+  { label: "TRM Usage",            ideas:  5, vars:  8 },
+  { label: "Dropoff Bottom Sheet", ideas:  4, vars:  8 },
+  { label: "MCD",                  ideas:  4, vars:  7 },
+  { label: "ExternalTurnstile",    ideas:  4, vars:  7 },
+  { label: "OAuth",                ideas:  3, vars:  5 },
+  { label: "MEC Single Step",      ideas:  3, vars:  5 },
+];
+
+const maxVars = data[0].vars;
+const rankList = document.getElementById('rank-list');
+const tbody = document.getElementById('full-tbody');
+
+data.forEach((d, i) => {
+  const pct = (d.vars / maxVars * 100).toFixed(1);
+  rankList.innerHTML += `
+    <div class="rank-row" title="${d.label}: ${d.ideas} ideas, ${d.vars} variations">
+      <div class="rank-num">${i+1}</div>
+      <div class="rank-label">${d.label}</div>
+      <div class="rank-bar-track">
+        <div class="rank-bar-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="rank-val">${d.vars}</div>
+    </div>`;
+  tbody.innerHTML += `<tr>
+    <td style="padding:4px 0;border-bottom:1px solid var(--gridline);color:var(--text-muted)">${i+1}</td>
+    <td style="padding:4px 8px;border-bottom:1px solid var(--gridline)">${d.label}</td>
+    <td style="padding:4px 0;border-bottom:1px solid var(--gridline);text-align:right;font-variant-numeric:tabular-nums">${d.ideas}</td>
+    <td style="padding:4px 0;border-bottom:1px solid var(--gridline);text-align:right;font-variant-numeric:tabular-nums">${d.vars}</td>
+  </tr>`;
+});
+
+// donut
+const COLORS = ['#2a78d6','#1baf7a','#eda100','#4a3aa7','#e34948','#c3c2b7'];
+const total = 172;
+const top5 = data.slice(0,5);
+const other = data.slice(5).reduce((s,d) => s+d.vars, 0);
+const donutData = [...top5.map(d=>({label:d.label,val:d.vars})),{label:'Other sections',val:other}];
+const CX=70,CY=70,R=58,IR=38,gap=0.03;
+let angle = -Math.PI/2;
+let paths = '';
+const svg = document.getElementById('donut-svg');
+
+donutData.forEach((d,i) => {
+  const share = d.val/total;
+  const sweep = share*2*Math.PI - gap;
+  const a1=angle+gap/2, a2=angle+sweep;
+  const x1=CX+R*Math.cos(a1),y1=CY+R*Math.sin(a1);
+  const x2=CX+R*Math.cos(a2),y2=CY+R*Math.sin(a2);
+  const ix1=CX+IR*Math.cos(a1),iy1=CY+IR*Math.sin(a1);
+  const ix2=CX+IR*Math.cos(a2),iy2=CY+IR*Math.sin(a2);
+  const large = sweep>Math.PI?1:0;
+  paths += `<path d="M ${ix1} ${iy1} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} L ${ix2} ${iy2} A ${IR} ${IR} 0 ${large} 0 ${ix1} ${iy1} Z" fill="${COLORS[i]}">
+    <title>${d.label}: ${d.val} variations (${(share*100).toFixed(0)}%)</title></path>`;
+  angle += sweep+gap;
+});
+
+const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+g.innerHTML = paths;
+svg.insertBefore(g, svg.firstChild);
+
+const legend = document.getElementById('arc-legend');
+donutData.forEach((d,i) => {
+  const pct = (d.val/total*100).toFixed(0);
+  legend.innerHTML += `<div class="arc-row">
+    <span class="arc-name"><span class="arc-dot" style="background:${COLORS[i]}"></span>${d.label}</span>
+    <span class="arc-pct">${pct}%</span>
+  </div>`;
+});
+</script>
+</body>
+</html>
