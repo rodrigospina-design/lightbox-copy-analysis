@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lightbox v5 — Copy Experiments</title>
+<style>
+  :root {
+    --bg:             #0d0d0d;
+    --surface:        #1a1a19;
+    --surface-2:      #232321;
+    --surface-3:      #2a2a27;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --border:         rgba(255,255,255,0.07);
+    --accent:         #3987e5;
+    --accent-light:   #1c2e4a;
+
+    /* Section colors */
+    --c-intro:        #7c6cf5;
+    --c-intro-bg:     #1e1b3a;
+    --c-bank:         #3987e5;
+    --c-bank-bg:      #1c2e4a;
+    --c-login:        #e5703e;
+    --c-login-bg:     #2e1e14;
+    --c-oauth:        #199e70;
+    --c-oauth-bg:     #102b21;
+    --c-mfa:          #c98500;
+    --c-mfa-bg:       #2a2100;
+    --c-account:      #e66767;
+    --c-account-bg:   #2d1a1a;
+    --c-dropoff:      #9085e9;
+    --c-dropoff-bg:   #1f1a38;
+    --c-survey:       #4db8a4;
+    --c-survey-bg:    #112824;
+    --c-trm:          #e5a93e;
+    --c-trm-bg:       #2a1f0a;
+    --c-olb:          #5cb8e4;
+    --c-olb-bg:       #112430;
+    --c-mcd:          #b07dda;
+    --c-mcd-bg:       #221430;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 40px 32px 80px;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  /* ── header ── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--gridline);
+    gap: 24px;
+  }
+  .header-left h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .header-left p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .header-left a {
+    color: var(--accent);
+    font-size: 12px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+  }
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .badge {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .stat-pair {
+    display: flex;
+    gap: 12px;
+  }
+  .stat-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    text-align: center;
+  }
+  .stat-chip .n { font-size: 20px; font-weight: 700; }
+  .stat-chip .l { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; }
+
+  /* ── search ── */
+  .search-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    padding: 12px 0 16px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--gridline);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .search-bar input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+  }
+  .search-bar input::placeholder { color: var(--text-muted); }
+  .search-bar input:focus { border-color: var(--accent); }
+  .filter-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 8px 0 4px;
+  }
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: all 120ms;
+    white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text-primary); }
+  .filter-btn.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+  /* ── section group ── */
+  .section-group { margin-bottom: 40px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--gridline);
+  }
+  .section-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+  }
+  .section-header .count {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  /* ── experiment card ── */
+  .exp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color 120ms;
+  }
+  .exp-card:hover { border-color: rgba(255,255,255,0.14); }
+
+  .exp-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .exp-id {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  .exp-title {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+  }
+  .exp-effort {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    background: var(--surface-2);
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .exp-chevron {
+    color: var(--text-muted);
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: transform 200ms;
+  }
+  .exp-card.open .exp-chevron { transform: rotate(180deg); }
+
+  .exp-body {
+    display: none;
+    padding: 0 18px 18px;
+    border-top: 1px solid var(--gridline);
+  }
+  .exp-card.open .exp-body { display: block; }
+
+  .exp-section-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 14px;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+  .exp-hypothesis {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  .outcomes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .outcome {
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .outcome-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+  .outcome-label.win { color: #199e70; }
+  .outcome-label.fail { color: #e66767; }
+  .outcome-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .variations-box {
+    background: var(--surface-3);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-top: 8px;
+  }
+  .variations-box .vl {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 7px;
+  }
+  .variation-pill {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    margin: 3px 3px 3px 0;
+  }
+
+  .note-box {
+    background: var(--surface-3);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .depends-tag {
+    display: inline-block;
+    background: #1c2e4a;
+    color: var(--accent);
+    font-size: 11px;
+    border-radius: 5px;
+    padding: 2px 8px;
+    margin-top: 8px;
+  }
+
+  /* ── empty state ── */
+  .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
+
+  /* ── footer ── */
+  .footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--gridline);
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>Lightbox v5 — Copy Experiments</h1>
+    <p>UX writing · 34 copy-only experiments · 11 sections</p>
+    <a href="https://www.figma.com/design/2v26EtBnv5WL3a7YY6xiAJ/Lightbox-v5?node-id=8936-78451&t=PJPS38KhNozmIqEP-1" target="_blank" rel="noopener">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      View Figma file
+    </a>
+  </div>
+  <div class="header-right">
+    <div class="badge">Tests &amp; Quick Wins</div>
+    <div class="stat-pair">
+      <div class="stat-chip"><div class="n">34</div><div class="l">Experiments</div></div>
+      <div class="stat-chip"><div class="n">11</div><div class="l">Sections</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="Search experiments…" oninput="filterCards()" />
+</div>
+<div class="filter-row" id="filterRow">
+  <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+  <button class="filter-btn" onclick="setFilter('before-bank', this)">Before Bank Selection</button>
+  <button class="filter-btn" onclick="setFilter('bank', this)">Bank Selection</button>
+  <button class="filter-btn" onclick="setFilter('login', this)">Native Sign In</button>
+  <button class="filter-btn" onclick="setFilter('oauth', this)">OAuth</button>
+  <button class="filter-btn" onclick="setFilter('mfa', this)">MFA</button>
+  <button class="filter-btn" onclick="setFilter('account', this)">Account Selection</button>
+  <button class="filter-btn" onclick="setFilter('dropoff', this)">Dropoff</button>
+  <button class="filter-btn" onclick="setFilter('survey', this)">Survey</button>
+  <button class="filter-btn" onclick="setFilter('trm', this)">TRM</button>
+  <button class="filter-btn" onclick="setFilter('olb', this)">OLB / Redirect</button>
+  <button class="filter-btn" onclick="setFilter('mcd', this)">MCD</button>
+</div>
+
+<div id="experimentList">
+
+<!-- ═══════════════════════════════════════════════════════ BEFORE BANK SELECTION -->
+<div class="section-group" data-section="before-bank">
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--c-intro)"></div>
+    <h2>Before Bank Selection</h2>
+    <span class="count">3 experiments</span>
+  </div>
+
+  <div class="exp-card" data-section="before-bank" data-title="Benefit-first intro screen title">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-intro-bg);color:var(--c-intro)">#C1</span>
+      <span class="exp-title">Benefit-first intro screen title</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we rewrite the intro title to lead with the user's outcome (action/benefit-first framing, implying no card is needed), then more users proceed to bank selection because the user already knows the merchant — the headline should answer "what will I be doing?" not restate context they already have.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Benefit-first framing at the entry point sets intent and reduces cold-start anxiety. Users who understand what they're about to do proceed more confidently.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">The title isn't what causes hesitation at this step — users drop because of credential anxiety downstream, not because the intro headline is unclear.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="before-bank" data-title="Action-aligned intro CTA">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-intro-bg);color:var(--c-intro)">#C2</span>
+      <span class="exp-title">Action-aligned intro CTA</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we change the intro CTA to describe what happens next ("Connect my bank") rather than generic progression ("Continue"), then click-through increases because the CTA sets the expectation of the next step and aligns with the action the user is about to take.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Connect my bank</span>
+        <span class="variation-pill">Pay with my bank</span>
+        <span class="variation-pill">Select my bank</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">CTAs that name the next action outperform generic progression labels. Naming the action reduces uncertainty about what "continue" means.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users don't read CTA labels carefully at intro screens — they tap whatever button moves them forward regardless of the label.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="before-bank" data-title="Callout re-entry measurement">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-intro-bg);color:var(--c-intro)">#C3</span>
+      <span class="exp-title">Callout re-entry — measurement opportunity</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we instrument the "learn more" callout click and return rate, then we can determine whether users who click out return to complete the flow — informing whether this link is a trust-building asset or a dropout accelerator.</div>
+      <div class="note-box">⚠️ Measurement annotation, not a copy change. Pair with any copy experiment on this screen to capture baseline behaviour.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Callout clicks have a meaningful return rate — the link is building trust. Optimise its copy and position.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Most users who click the callout do not return — it's a dropout accelerator. Remove or replace with inline content.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ BANK SELECTION -->
+<div class="section-group" data-section="bank">
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--c-bank)"></div>
+    <h2>Bank Selection</h2>
+    <span class="count">5 experiments</span>
+  </div>
+
+  <div class="exp-card" data-section="bank" data-title="Conversational screen title">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-bank-bg);color:var(--c-bank)">#C4</span>
+      <span class="exp-title">Conversational screen title</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we change "Select your bank" to a more conversational tone, then more users engage with the bank list because a lower-friction framing reduces the transactional feel of the first real decision point.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Which bank do you use?</span>
+        <span class="variation-pill">Connect your bank</span>
+        <span class="variation-pill">Select your bank (control)</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Conversational headers reduce perceived friction. Readability grade correlates with engagement on this screen.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users scan directly to the bank list — copy tone at this level is too subtle to move the needle.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="bank" data-title="Search placeholder natural language">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-bank-bg);color:var(--c-bank)">#C5</span>
+      <span class="exp-title">Search placeholder — natural language</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we change the search placeholder to more natural language, then search engagement increases because a friendlier, more explicit instruction reduces hesitation on first tap.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Search for your bank</span>
+        <span class="variation-pill">Search by bank name</span>
+        <span class="variation-pill">Find your bank (control)</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Placeholder copy quality affects engagement. Explicit objects ("for your bank") reduce ambiguity for first-time users.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users ignore placeholder text — they tap and type regardless of what it says.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="bank" data-title="Most popular section label geo-aware">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-bank-bg);color:var(--c-bank)">#C6</span>
+      <span class="exp-title">"Most popular" label — geo-aware variation</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we replace "Most popular" with "Your region's top banks" when geo-location is available, then users feel the list is personalised and trust that their bank is more likely to appear.</div>
+      <div class="depends-tag">Depends on: geo-location config</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Personalised section labels increase perceived relevance. Even a copy-level personalisation signal lifts trust in the list.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">"Most popular" is already understood as "relevant to me" — geo language raises privacy concerns or users don't notice it.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="bank" data-title="Returning user YOUR BANK label">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-bank-bg);color:var(--c-bank)">#C7</span>
+      <span class="exp-title">Returning user label — "Your bank"</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we label the returning user's previously used bank as "YOUR BANK" instead of "last used", then returning users feel a stronger sense of ownership and personal recognition, reducing time-to-selection.</div>
+      <div class="depends-tag">Depends on: returning user detection</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Ownership language ("YOUR BANK") outperforms behavioural history labels ("last used"). Personalisation at this micro level builds belonging.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">"Last used" is clearer — "YOUR BANK" is ambiguous for users with multiple banks and may not accelerate selection.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="bank" data-title="No results empty state help first framing">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-bank-bg);color:var(--c-bank)">#C8</span>
+      <span class="exp-title">No-results empty state — help-first framing</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we change the no-results state from "This bank isn't available" to help-first framing, then fewer users abandon because the copy shifts from a dead-end signal to an actionable prompt that keeps users in the flow.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Don't see your bank? Try a different spelling</span>
+        <span class="variation-pill">Can't find your bank? Check the spelling</span>
+        <span class="variation-pill">Your bank may not be listed yet</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Help-first empty states retain users who would have read "isn't available" as permanent. Keeps them trying rather than accepting a dead end.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users who see no results searched accurately — reframing doesn't change the underlying absence of their bank.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ NATIVE SIGN IN -->
+<div class="section-group" data-section="login">
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--c-login)"></div>
+    <h2>Native Bank Sign In</h2>
+    <span class="count">8 experiments</span>
+  </div>
+
+  <div class="exp-card" data-section="login" data-title="Subtitle remove jargon credentials">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-login-bg);color:var(--c-login)">#C9</span>
+      <span class="exp-title">Subtitle — remove jargon ("credentials")</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we replace "credentials" with plain-language alternatives, then users feel less intimidated because "credentials" is IT language that increases perceived technical complexity at the highest-anxiety moment in the flow.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Your sign in details are encrypted</span>
+        <span class="variation-pill">Your login details are encrypted</span>
+        <span class="variation-pill">Your details stay private and secure</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Plain language on the login subtitle reduces anxiety. Readability grade improvements at this step directly reduce hesitation.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users don't process the subtitle carefully — they look at the form fields. Subtitle copy doesn't move the needle here.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="login" data-title="Username field label bank-agnostic">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-login-bg);color:var(--c-login)">#C10</span>
+      <span class="exp-title">Username field label — bank-agnostic copy</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we change the username field label to accommodate multiple bank terminologies, then fewer users hesitate because the disconnect between "Username" and their bank's actual label creates doubt about whether they're entering the right credential.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Username or ID</span>
+        <span class="variation-pill">Online ID or Username</span>
+        <span class="variation-pill">Dynamic per-bank label</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Field label alignment with the user's bank terminology reduces credential entry errors. Small label mismatches cause outsized doubt at this step.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users are familiar with their own bank's terminology — they enter their credential correctly regardless of our label.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="login" data-title="Username helper text reference frame">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-login-bg);color:var(--c-login)">#C11</span>
+      <span class="exp-title">Username helper text — reference frame</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we add supporting text "As shown on your bank's website" below the username field, then users feel more confident entering the correct credential because the reference frame anchors them to a context they know and trust.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Reference-frame helper text reduces username entry hesitation without changing the label itself.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users who know their credentials don't need the text; users who don't still need to look up their bank.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="login" data-title="Password field label terminology coverage">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-login-bg);color:var(--c-login)">#C12</span>
+      <span class="exp-title">Password field label — terminology coverage</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we broaden the password field label to "Password or PIN", then fewer users hesitate because their bank uses "Passcode" or "PIN" and the label now covers their actual terminology.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Password or PIN</span>
+        <span class="variation-pill">Password or Passcode</span>
+        <span class="variation-pill">Dynamic per-bank</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Terminology coverage in field labels reduces credential friction. A label matching what the user's bank calls it eliminates "am I entering the right thing?" doubt.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users know their own bank's login process — a label change doesn't help users who are simply unsure of their credentials.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="login" data-title="Forgot password title orienting">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-login-bg);color:var(--c-login)">#C13</span>
+      <span class="exp-title">Forgot password title — less abrupt, more orienting</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we rewrite the forgot password screen title to be more accurate ("Reset your password on your bank's site"), then users feel oriented rather than abandoned when they leave the flow, because the current title doesn't explain that they're temporarily leaving Trustly.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Accurate transition messaging reduces abandonment on the "forgot password" path. Users who understand they're going to their bank are more likely to return.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users who tap "forgot password" have already decided to reset — the title doesn't change their path.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="login" data-title="Login subtitle remove warning tone">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-login-bg);color:var(--c-login)">#C14</span>
+      <span class="exp-title">Login subtitle — remove warning tone</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we remove "please make sure" phrasing from the login subtitle, then users feel reassured rather than warned — "please make sure" reads like a warning about error risk rather than a confidence-building statement.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Removing warning-adjacent phrasing from trust copy increases perceived safety. The subtitle should feel like reassurance, not a caveat.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">The phrasing is subtle enough that users don't interpret "please make sure" as a warning — the change is too minor to affect behaviour.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="login" data-title="Sign in CTA action-descriptive label">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-login-bg);color:var(--c-login)">#C15</span>
+      <span class="exp-title">Sign in CTA — action-descriptive label</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we change "Agree & Sign in" to "Sign in" or "Sign in to my bank", then more users tap because the label describes the action rather than combining a legal commitment with a progression step.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Sign in</span>
+        <span class="variation-pill">Sign in to my bank</span>
+        <span class="variation-pill">Agree &amp; Sign in (control)</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Separating legal agreement from action CTAs increases tap rate. "Agree &" adds a contractual frame to what should feel like a simple action.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">The "Agree" word isn't what's stopping users — they're hesitating about credentials, not about terms.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="login" data-title="Invalid credentials error generic actionable">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-login-bg);color:var(--c-login)">#C16</span>
+      <span class="exp-title">Invalid credentials error — generic but actionable</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we change the invalid credentials error to "Check your details and try again" (without specifying which field is wrong), then users retry rather than abandon — the message is calm and actionable without giving attackers field-level information.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Check your details and try again</span>
+        <span class="variation-pill">Check your info and try again</span>
+        <span class="variation-pill">Something doesn't match — try again</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Generic-but-actionable error messages retain retrying users while maintaining security. "Check your details" is warm enough to feel helpful without helping bad actors.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users need to know which field is wrong — a generic message increases frustration and consecutive failures.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ OAUTH -->
+<div class="section-group" data-section="oauth">
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--c-oauth)"></div>
+    <h2>OAuth</h2>
+    <span class="count">2 experiments</span>
+  </div>
+
+  <div class="exp-card" data-section="oauth" data-title="OAuth subtitle specific action framing">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-oauth-bg);color:var(--c-oauth)">#C17</span>
+      <span class="exp-title">OAuth subtitle — specific action framing</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we replace "access your accounts" with "connect your account for this payment", then users feel less exposed because "access your accounts" implies broad, ongoing access rather than a single, scoped action.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Specificity in OAuth copy reduces perceived scope of permission. Users who understand they're connecting "for this payment" feel less like they're granting blanket access.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users don't parse the difference — both feel like the same thing at this step.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="oauth" data-title="OAuth subtitle active reduced copy">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-oauth-bg);color:var(--c-oauth)">#C18</span>
+      <span class="exp-title">OAuth subtitle — active, reduced copy</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we reduce the OAuth subtitle to an active, single-instruction sentence, then users scan and proceed faster because active voice and word reduction improve readability grade and lower cognitive load on the transition screen.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Shorter active copy on transition screens reduces time-to-tap. Users scan for the action signal, not full sentences.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">The reduced copy removes context users need to feel comfortable with the redirect. Shorter isn't always better when trust is the primary job.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ MFA -->
+<div class="section-group" data-section="mfa">
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--c-mfa)"></div>
+    <h2>MFA</h2>
+    <span class="count">5 experiments</span>
+  </div>
+
+  <div class="exp-card" data-section="mfa" data-title="MFA method selection conversational subtitle">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-mfa-bg);color:var(--c-mfa)">#C19</span>
+      <span class="exp-title">MFA method selection — conversational subtitle</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we replace "Authentication method" with a conversational question, then users feel less intimidated because "authentication method" is technical jargon that increases perceived complexity at an already-anxious step.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">How would you like to verify?</span>
+        <span class="variation-pill">Choose how to confirm it's you</span>
+        <span class="variation-pill">Which verification method do you prefer?</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Conversational questions outperform noun-phrase labels in MFA subtitles. Jargon at this step increases abandonment among less technical users.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users understand "authentication method" in context — the options below the subtitle already explain the choices clearly.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="mfa" data-title="MFA code sent subtitle sentence reduction">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-mfa-bg);color:var(--c-mfa)">#C20</span>
+      <span class="exp-title">MFA code sent subtitle — sentence reduction</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we consolidate the MFA code-sent subtitle from two separate instructions into one clear sentence, then users process the message faster because a unified sentence reduces re-reading and ambiguity.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Single-sentence MFA instructions outperform multi-instruction subtitles. One clear action is better than two partially overlapping instructions.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">The two instructions serve different purposes — merging them loses one and creates ambiguity.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="mfa" data-title="MFA waiting supporting text conversational tone">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-mfa-bg);color:var(--c-mfa)">#C21</span>
+      <span class="exp-title">MFA waiting supporting text — conversational tone</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we rewrite the MFA waiting message in shorter, conversational sentences (improving readability from grade 5 to grade 0), then users feel less stressed while waiting because a warmer tone reduces the clinical feel of the waiting state.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Readability grade improvements in MFA waiting copy reduce abandonment. Shorter sentences feel like reassurance rather than instructions.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users at the MFA waiting step have committed — copy tone at this state doesn't change behaviour.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="mfa" data-title="MFA push notification subtitle remove ambiguity">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-mfa-bg);color:var(--c-mfa)">#C22</span>
+      <span class="exp-title">MFA push notification subtitle — remove ambiguity</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we remove "when requested" and replace it with a specific action description ("tap the notification in your bank app"), then fewer users are confused about what to do after the push is sent.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Removing passive-voice ambiguity from action instructions reduces MFA abandonment. Naming the expected action drives completion.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users who receive a push notification understand what to do from the notification itself — in-flow instruction is secondary.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="mfa" data-title="MFA push notification remove future tense">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-mfa-bg);color:var(--c-mfa)">#C23</span>
+      <span class="exp-title">MFA push notification — remove future-tense instruction</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we remove the subtitle that describes what will happen (future tense, likely already past by the time the user reads it) and keep only the present-state instruction, then users feel less confused.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Removing future-tense instructions that are already past improves clarity. State copy should match reality.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Some users arrive before the notification fires — removing "you'll receive" leaves them without context during a brief delay.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ ACCOUNT SELECTION -->
+<div class="section-group" data-section="account">
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--c-account)"></div>
+    <h2>Account Selection</h2>
+    <span class="count">3 experiments</span>
+  </div>
+
+  <div class="exp-card" data-section="account" data-title="Account selection title payment context">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-account-bg);color:var(--c-account)">#C24</span>
+      <span class="exp-title">Account selection title — payment context</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we add payment context to the account selection title ("Choose the account to pay from"), then users feel clearer about why they're choosing and which account is appropriate, reducing selection hesitation.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Context-aware titles at decision screens reduce hesitation. Knowing the purpose of the selection helps users choose faster.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users understand the context from the flow — they know they're depositing. The addition adds words without adding information.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="account" data-title="Insufficient funds label empathetic framing">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-account-bg);color:var(--c-account)">#C25</span>
+      <span class="exp-title">Insufficient funds label — empathetic framing</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we replace the stark "Insufficient funds" label with softer, more informative language, then users feel informed rather than blocked and are more likely to select a different account rather than abandon.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Balance too low for this deposit</span>
+        <span class="variation-pill">Not enough funds available</span>
+        <span class="variation-pill">Insufficient funds (control)</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Empathetic framing of account errors reduces abandonment. "Balance too low" reads as information; "Insufficient funds" reads as a system error.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">"Insufficient funds" is standard banking language users understand precisely. Softer language may obscure the meaning.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="account" data-title="NACHA authorization plain language label">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-account-bg);color:var(--c-account)">#C26</span>
+      <span class="exp-title">NACHA authorization — plain language label</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we replace "NACHA Authorization" with a plain-language description of what the user is agreeing to, then users feel less intimidated at the final commit step — industry acronyms trigger "what am I signing?" anxiety at point-of-commitment.</div>
+      <div class="depends-tag">Depends on: legal review</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Plain-language authorization labels reduce hesitation at the final commit step. Users who understand what they're authorising in their own words are more likely to proceed.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">"NACHA Authorization" is legally required terminology that cannot be changed, or users in the target market are already familiar with the term.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DROPOFF -->
+<div class="section-group" data-section="dropoff">
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--c-dropoff)"></div>
+    <h2>Dropoff Bottom Sheet</h2>
+    <span class="count">3 experiments</span>
+  </div>
+
+  <div class="exp-card" data-section="dropoff" data-title="Dropoff title name what's being left">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-dropoff-bg);color:var(--c-dropoff)">#C27</span>
+      <span class="exp-title">Dropoff title — name what's being left</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we change the dropoff title to name what the user is about to leave ("Cancel your deposit?"), then fewer users confirm the exit because making the consequence concrete activates loss aversion more effectively than a generic exit confirmation.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Cancel your deposit?</span>
+        <span class="variation-pill">Leave your payment?</span>
+        <span class="variation-pill">Sure you want to leave?</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Naming the specific thing being abandoned is more effective at reversing exit intent than generic cancellation language.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users who tap close have decided to leave — the title doesn't change that decision regardless of specificity.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="dropoff" data-title="Dropoff subtitle remove cancel from body">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-dropoff-bg);color:var(--c-dropoff)">#C28</span>
+      <span class="exp-title">Dropoff subtitle — remove "cancel" from body</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we remove the word "cancel" entirely from the dropoff body copy and focus instead on what's still possible ("You're almost there — your bank details are ready"), then fewer users exit because de-emphasising the exit while highlighting progress activates sunk-cost instinct.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Removing "cancel" from the body reduces salience of the exit option. "You're almost there" is more likely to reverse course than "cancel your session."</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users who opened the exit sheet know they want to leave — body copy reframing doesn't overcome actual exit intent.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="dropoff" data-title="Dropoff CTA specific consequence label">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-dropoff-bg);color:var(--c-dropoff)">#C29</span>
+      <span class="exp-title">Dropoff CTA — specific consequence label</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we make the exit CTA label specific about what will be cancelled ("Yes, cancel my deposit"), then cognitive friction of tapping a specific consequence reduces impulsive exits.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Specific consequence labels on exit CTAs reduce impulsive taps. "Yes, cancel my deposit" requires more deliberate commitment than "Leave" or "Cancel."</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users who tapped the exit affordance are already committed to leaving — the CTA label doesn't add enough friction to reverse the decision.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ SURVEY -->
+<div class="section-group" data-section="survey">
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--c-survey)"></div>
+    <h2>Dropoff Survey</h2>
+    <span class="count">1 experiment</span>
+  </div>
+
+  <div class="exp-card" data-section="survey" data-title="Survey title softer optional-feeling question">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-survey-bg);color:var(--c-survey)">#C30</span>
+      <span class="exp-title">Survey title — softer, optional-feeling question</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we change the survey title to a softer, more curious question, then more users engage because the current title reads as interrogative while a gentler framing implies the answer is optional and low-stakes.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Mind telling us why?</span>
+        <span class="variation-pill">Help us understand?</span>
+        <span class="variation-pill">Quick question before you go</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Low-pressure survey framing increases response rates. Users who feel the answer is optional are more likely to provide one.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Survey title framing doesn't affect response rates — users who want to answer will, and those who don't won't, regardless of phrasing.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ TRM -->
+<div class="section-group" data-section="trm">
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--c-trm)"></div>
+    <h2>Trustly Remember Me Usage</h2>
+    <span class="count">1 experiment</span>
+  </div>
+
+  <div class="exp-card" data-section="trm" data-title="TRM verification subtitle reward framing">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-trm-bg);color:var(--c-trm)">#C31</span>
+      <span class="exp-title">TRM verification subtitle — reward framing</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we frame the verification prompt as a small step toward a benefit ("Verify it's you — then you're in"), then users complete verification more willingly because reward-framing reduces perceived friction by anchoring verification as the last step before the payoff.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Verify it's you to continue</span>
+        <span class="variation-pill">One quick check and you're in</span>
+        <span class="variation-pill">Confirm it's you — then you're done</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Reward-framed verification prompts outperform neutral instructions. "Then you're in" shifts the mental model from "being asked" to "almost done."</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users at this step have already opted into TRM — the framing of the subtitle doesn't affect their willingness to verify.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ OLB / REDIRECT -->
+<div class="section-group" data-section="olb">
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--c-olb)"></div>
+    <h2>OLB / OAuth Redirect</h2>
+    <span class="count">2 experiments</span>
+  </div>
+
+  <div class="exp-card" data-section="olb" data-title="Redirect subtitle time expectation return reassurance">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-olb-bg);color:var(--c-olb)">#C32</span>
+      <span class="exp-title">Redirect subtitle — time expectation + return reassurance</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we rewrite the redirect subtitle to set a time expectation and make the return automatic ("This takes about 30 seconds — you'll be brought back here automatically"), then OAuth abandonment drops because users who know the return is automatic and time-bounded feel less uncertain about leaving the current screen.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Time expectation + automatic return copy reduces OAuth redirect abandonment. The two fears at this step — "how long?" and "will I get back?" — are both answered in one sentence.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">Users who abandon at the redirect do so based on fundamental trust concerns — copy addressing timing doesn't overcome credential anxiety.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp-card" data-section="olb" data-title="Redirect CTA destination-named label">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-olb-bg);color:var(--c-olb)">#C33</span>
+      <span class="exp-title">Redirect CTA — destination-named label</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we name the destination in the redirect CTA ("Sign in with Chase" instead of "Go to Chase"), then users feel oriented because naming the destination mirrors the SSO patterns users already know and is consistent with earlier OAuth language.</div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Destination-named CTAs on redirect screens reduce hesitation. Consistency with "Sign in with [bank]" framing creates a familiar, expected pattern.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">The destination name is already visible in context — the CTA label change is too subtle to affect behaviour at this step.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ MCD -->
+<div class="section-group" data-section="mcd">
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--c-mcd)"></div>
+    <h2>MCD</h2>
+    <span class="count">1 experiment</span>
+  </div>
+
+  <div class="exp-card" data-section="mcd" data-title="MCD secondary button active-state label">
+    <div class="exp-header" onclick="toggle(this)">
+      <span class="exp-id" style="background:var(--c-mcd-bg);color:var(--c-mcd)">#C34</span>
+      <span class="exp-title">MCD secondary button — active-state label</span>
+      <span class="exp-effort">0.5sp</span>
+      <span class="exp-chevron">▼</span>
+    </div>
+    <div class="exp-body">
+      <div class="exp-section-label">Hypothesis</div>
+      <div class="exp-hypothesis">If we change the secondary button from "Didn't receive" to "Still looking" (or similar active-state framing), then fewer users tap the secondary prematurely because "didn't receive" is definitive while "still looking" reflects the actual user state in the first 30 seconds.</div>
+      <div class="variations-box">
+        <div class="vl">Variations to test</div>
+        <span class="variation-pill">Still looking for it</span>
+        <span class="variation-pill">Check again</span>
+        <span class="variation-pill">Didn't receive it (control)</span>
+      </div>
+      <div class="outcomes">
+        <div class="outcome">
+          <div class="outcome-label win">✓ If it wins</div>
+          <div class="outcome-text">Active-state button labels reduce premature secondary-action taps. "Still looking" is more accurate than "didn't receive" in the first 30 seconds.</div>
+        </div>
+        <div class="outcome">
+          <div class="outcome-label fail">✗ If it fails</div>
+          <div class="outcome-text">"Didn't receive" is the accurate state for users who tap it — they've waited and nothing arrived. The label change doesn't reflect a meaningful difference.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="empty" id="emptyState" style="display:none">No experiments match your search.</div>
+</div>
+
+<div class="footer">Lightbox v5 · UX Writing · 34 copy experiments · 11 sections</div>
+
+<script>
+  function toggle(header) {
+    const card = header.closest('.exp-card');
+    card.classList.toggle('open');
+  }
+
+  let activeFilter = 'all';
+
+  function setFilter(section, btn) {
+    activeFilter = section;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterCards();
+  }
+
+  function filterCards() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    let anyVisible = false;
+
+    document.querySelectorAll('.section-group').forEach(group => {
+      const groupSection = group.dataset.section;
+      const sectionMatch = activeFilter === 'all' || activeFilter === groupSection;
+      let groupHasVisible = false;
+
+      group.querySelectorAll('.exp-card').forEach(card => {
+        const title = (card.dataset.title || '').toLowerCase();
+        const body = card.innerText.toLowerCase();
+        const textMatch = !q || title.includes(q) || body.includes(q);
+        const visible = sectionMatch && textMatch;
+        card.style.display = visible ? '' : 'none';
+        if (visible) { groupHasVisible = true; anyVisible = true; }
+      });
+
+      group.style.display = groupHasVisible ? '' : 'none';
+    });
+
+    document.getElementById('emptyState').style.display = anyVisible ? 'none' : 'block';
+  }
+</script>
+</body>
+</html>
